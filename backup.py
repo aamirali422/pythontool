@@ -84,10 +84,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 
 SESSION = requests.Session()
 SESSION.auth = (f"{Z_EMAIL}/token", Z_TOKEN)
-SESSION.headers.update({
-    "Accept": "application/json",
-    "User-Agent": "zendesk-backup/1.0 (+python-requests)"
-})
+# Keep only a UA globally; do NOT force Accept here (breaks attachments)
+SESSION.headers.update({"User-Agent": "zendesk-backup/1.0 (+python-requests)"})
+SESSION.headers.pop("Accept", None)  # ensure no global Accept
 RETRY_STATUS = {429, 500, 502, 503, 504}
 
 # ----------------------------
@@ -112,10 +111,29 @@ def parse_dt(s: Optional[str]) -> Optional[str]:
     except Exception:
         return None
 
-def get_with_retry(url: str, params: Dict[str, Any] = None, stream: bool = False) -> Union[requests.Response, Dict[str, Any]]:
+def get_with_retry(
+    url: str,
+    params: Dict[str, Any] = None,
+    stream: bool = False,
+    headers: Optional[Dict[str, str]] = None
+) -> Union[requests.Response, Dict[str, Any]]:
+    """
+    - For JSON API calls: use Accept: application/json
+    - For binary/attachments (stream=True): use Accept: */*
+    """
+    if headers is None:
+        headers = {"Accept": "*/*"} if stream else {"Accept": "application/json"}
+
     backoff = 1.0
     for _ in range(8):
-        resp = SESSION.get(url, params=params, timeout=120, stream=stream)
+        resp = SESSION.get(
+            url,
+            params=params,
+            timeout=120,
+            stream=stream,
+            headers=headers,
+            allow_redirects=True,   # important for S3 redirects
+        )
         if resp.status_code == 200:
             return resp if stream else resp.json()
         if resp.status_code in RETRY_STATUS:
@@ -125,6 +143,7 @@ def get_with_retry(url: str, params: Dict[str, Any] = None, stream: bool = False
             time.sleep(sleep_for)
             backoff = min(backoff * 2, 30.0)
             continue
+        # Non-retryable error
         try:
             detail = resp.json()
         except Exception:
@@ -470,7 +489,8 @@ def download_attachment(ticket_id: int, comment_id: Optional[int], att: Dict[str
         return str(target.resolve())
 
     try:
-        resp = get_with_retry(url, stream=True)  # same SESSION auth
+        # stream=True triggers Accept:*/* via get_with_retry default
+        resp = get_with_retry(url, stream=True)
         with open(target, "wb") as f:
             for chunk in resp.iter_content(chunk_size=1024 * 1024):
                 if chunk:

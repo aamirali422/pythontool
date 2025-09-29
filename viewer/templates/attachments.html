@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <h2 class="text-xl font-semibold">Attachments</h2>
+    <form method="get" class="flex flex-col gap-3 md:flex-row md:items-center">
+      <input class="px-3 py-2 rounded-lg ring-1 ring-slate-300 w-48" type="text" name="ticket_id" placeholder="Ticket ID" value="{{ ticket_id or '' }}">
+      <input class="px-3 py-2 rounded-lg ring-1 ring-slate-300 w-64" type="text" name="q" placeholder="Search filename" value="{{ q or '' }}">
+      <select class="px-3 py-2 rounded-lg ring-1 ring-slate-300" name="per_page">
+        {% for n in [10,25,50,100,200] %}
+          <option value="{{n}}" {% if per_page==n %}selected{% endif %}>{{n}} / page</option>
+        {% endfor %}
+      </select>
+      <button class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" type="submit">Apply</button>
+    </form>
+  </div>
+
+  <p class="text-sm text-slate-500 mt-2">Total: {{ total }} — Page {{ page }} of {{ total_pages }}</p>
+
+  <div class="mt-4 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-100 text-slate-700">
+        <tr>
+          <th class="text-left py-2 px-3">ID</th>
+          <th class="text-left py-2 px-3">File</th>
+          <th class="text-left py-2 px-3">Ticket</th>
+          <th class="text-left py-2 px-3">Type</th>
+          <th class="text-left py-2 px-3">Size</th>
+          <th class="text-left py-2 px-3">Created</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for a in attachments %}
+        <tr class="hover:bg-slate-50">
+          <td class="py-2 px-3">{{ a.id }}</td>
+          <td class="py-2 px-3">
+            <div class="flex items-center gap-3">
+              {% if a.local_url and (a.content_type or '').startswith('image/') %}
+                <a href="{{ a.local_url }}"><img class="w-12 h-12 object-cover rounded ring-1 ring-slate-200" src="{{ a.local_url }}" alt=""></a>
+              {% endif %}
+              <div>
+                <div class="font-medium">{{ a.file_name or '—' }}</div>
+                <div class="text-xs">
+                  {% if a.content_url %}
+                    <a class="text-indigo-700 hover:underline" href="{{ a.content_url }}" target="_blank">Open original</a>
+                  {% endif %}
+                  {% if a.local_url %}
+                    <span class="text-slate-400 mx-1">•</span>
+                    <a class="text-indigo-700 hover:underline" href="{{ a.local_url }}">Download local</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="py-2 px-3">
+            {% if a.ticket_id %}
+              <a class="text-indigo-700 hover:underline" href="{{ url_for('ticket_detail', ticket_id=a.ticket_id) }}">{{ a.ticket_id }}</a>
+            {% else %}—{% endif %}
+          </td>
+          <td class="py-2 px-3 text-slate-500">{{ a.content_type or '—' }}</td>
+          <td class="py-2 px-3 text-slate-500">{{ a.size or '—' }}</td>
+          <td class="py-2 px-3 text-slate-500">{{ a.created_at or '' }}</td>
+        </tr>
+        {% endfor %}
+        {% if attachments|length == 0 %}
+        <tr><td class="py-4 px-3 text-slate-500" colspan="6">No results.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex items-center gap-2">
+    {% if page > 1 %}
+      <a class="px-3 py-2 rounded-lg ring-1 ring-slate-300 hover:bg-slate-50"
+         href="{{ url_for('attachments_list', page=page-1, per_page=per_page, ticket_id=ticket_id, q=q) }}">← Prev</a>
+    {% else %}
+      <span class="px-3 py-2 rounded-lg ring-1 ring-slate-200 text-slate-400">← Prev</span>
+    {% endif %}
+    <span class="text-sm text-slate-500">Page {{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a class="px-3 py-2 rounded-lg ring-1 ring-slate-300 hover:bg-slate-50"
+         href="{{ url_for('attachments_list', page=page+1, per_page=per_page, ticket_id=ticket_id, q=q) }}">Next →</a>
+    {% else %}
+      <span class="px-3 py-2 rounded-lg ring-1 ring-slate-200 text-slate-400">Next →</span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

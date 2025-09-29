@@ -1,0 +1,32 @@
+<!doctype html>
+<html class="h-full">
+  <head>
+    <meta charset="utf-8">
+    <title>Zendesk Backup Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-full bg-slate-50 text-slate-900">
+    <header class="bg-indigo-600 text-white">
+      <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+        <a href="/" class="font-semibold tracking-wide">Zendesk Backup Viewer</a>
+        <nav class="space-x-4 text-indigo-100">
+          <a class="hover:text-white" href="/tickets">Tickets</a>
+          <a class="hover:text-white" href="/organizations">Organizations</a>
+          <a class="hover:text-white" href="/users">Users</a>
+          <a class="hover:text-white" href="/triggers">Triggers</a>
+          <a class="hover:text-white" href="/macros">Macros</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-4 py-6">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mt-8 py-6 text-center text-sm text-slate-500">
+      Local attachments dir:
+      <code class="px-1 py-0.5 rounded bg-slate-200">{{ ATTACHMENTS_DIR }}</code>
+    </footer>
+  </body>
+</html>

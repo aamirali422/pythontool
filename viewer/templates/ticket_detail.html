@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Left: ticket info -->
+  <div class="lg:col-span-2 space-y-6">
+
+    <div class="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6">
+      <div class="flex items-start justify-between gap-4">
+        <h2 class="text-xl font-semibold">Ticket #{{ ticket.id }}</h2>
+        {% set st = (ticket.status or '')|lower %}
+        <span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded {{ status_badges.get(st, 'bg-slate-200 text-slate-900 ring-1 ring-slate-300') }}">
+          {{ ticket.status or '—' }}
+        </span>
+      </div>
+
+      <dl class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div><dt class="text-slate-500">Priority</dt><dd>{{ ticket.priority or '—' }}</dd></div>
+        <div><dt class="text-slate-500">Type</dt><dd>{{ ticket.type or '—' }}</dd></div>
+        <div><dt class="text-slate-500">Requester</dt><dd>{{ ticket.requester_id or '—' }}</dd></div>
+        <div><dt class="text-slate-500">Assignee</dt><dd>{{ ticket.assignee_id or '—' }}</dd></div>
+        <div><dt class="text-slate-500">Organization</dt><dd>{{ ticket.organization_id or '—' }}</dd></div>
+        <div><dt class="text-slate-500">Created</dt><dd>{{ ticket.created_at or '' }}</dd></div>
+        <div><dt class="text-slate-500">Updated</dt><dd>{{ ticket.updated_at or '' }}</dd></div>
+        <div><dt class="text-slate-500">Due</dt><dd>{{ ticket.due_at or '—' }}</dd></div>
+      </dl>
+
+      <div class="mt-6">
+        <h3 class="font-medium mb-1">Subject</h3>
+        <p class="text-slate-700">{{ ticket.subject or '—' }}</p>
+      </div>
+
+      <div class="mt-6">
+        <h3 class="font-medium mb-1">Description</h3>
+        <div class="text-slate-700 whitespace-pre-wrap">{{ ticket.description or '—' }}</div>
+      </div>
+    </div>
+
+    <div class="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-3">Comments</h3>
+      {% if comments|length == 0 %}
+        <p class="text-slate-500">No comments.</p>
+      {% else %}
+        <div class="space-y-5">
+          {% for c in comments %}
+            <div>
+              <div class="text-xs text-slate-500 mb-2">
+                Comment #{{ c.id }} • Author {{ c.author_id or '—' }} • {{ c.created_at or '' }} • {% if c.public %}public{% else %}internal{% endif %}
+              </div>
+              <div class="text-slate-800 whitespace-pre-wrap">{{ c.body or '' }}</div>
+            </div>
+            {% if not loop.last %}<hr class="border-slate-200">{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Right: attachments -->
+  <div class="space-y-6">
+    <div class="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-3">Attachments</h3>
+      {% if attachments|length == 0 %}
+        <p class="text-slate-500">No attachments.</p>
+      {% else %}
+        <ul class="space-y-4">
+          {% for a in attachments %}
+          <li class="p-3 rounded-lg ring-1 ring-slate-200">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="text-sm font-medium">{{ a.file_name or '—' }}</div>
+                <div class="text-xs text-slate-500">ID {{ a.id }} • {{ a.content_type or '—' }} • {{ a.size or '—' }} bytes</div>
+                <div class="mt-1 text-sm">
+                  {% if a.content_url %}
+                    <a class="text-indigo-700 hover:underline" href="{{ a.content_url }}" target="_blank" rel="noopener">Open original URL</a>
+                  {% endif %}
+                  {% if a.local_url %}
+                    <span class="text-slate-400 mx-2">•</span>
+                    <a class="text-indigo-700 hover:underline" href="{{ a.local_url }}">Download local</a>
+                  {% endif %}
+                </div>
+              </div>
+              {% if a.exists_local and (a.content_type or '').startswith('image/') %}
+                <a href="{{ a.local_url }}">
+                  <img class="w-24 h-24 object-cover rounded-lg ring-1 ring-slate-200" src="{{ a.local_url }}" alt="{{ a.file_name or 'attachment' }}">
+                </a>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+    <a class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ring-1 ring-slate-300 hover:bg-slate-50"
+       href="{{ url_for('tickets') }}">← Back to tickets</a>
+  </div>
+</div>
+
+{% endblock %}

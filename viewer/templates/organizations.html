@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <h2 class="text-xl font-semibold">Organizations</h2>
+    <form method="get" class="flex flex-col gap-3 md:flex-row md:items-center">
+      <input class="px-3 py-2 rounded-lg ring-1 ring-slate-300 w-64" type="text" name="q" placeholder="Search name/external_id" value="{{ q or '' }}">
+      <select class="px-3 py-2 rounded-lg ring-1 ring-slate-300" name="per_page">
+        {% for n in [10,25,50,100,200] %}
+          <option value="{{n}}" {% if per_page==n %}selected{% endif %}>{{n}} / page</option>
+        {% endfor %}
+      </select>
+      <button class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" type="submit">Apply</button>
+    </form>
+  </div>
+
+  <p class="text-sm text-slate-500 mt-2">Total: {{ total }} — Page {{ page }} of {{ total_pages }}</p>
+
+  <div class="mt-4 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-100 text-slate-700">
+        <tr>
+          <th class="text-left py-2 px-3">ID</th>
+          <th class="text-left py-2 px-3">Name</th>
+          <th class="text-left py-2 px-3">External ID</th>
+          <th class="text-left py-2 px-3">Group</th>
+          <th class="text-left py-2 px-3">Updated</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for o in orgs %}
+        <tr class="hover:bg-slate-50">
+          <td class="py-2 px-3"><a class="text-indigo-700 hover:underline" href="{{ url_for('organization_detail', org_id=o.id) }}">{{ o.id }}</a></td>
+          <td class="py-2 px-3">{{ o.name or '—' }}</td>
+          <td class="py-2 px-3 text-slate-500">{{ o.external_id or '—' }}</td>
+          <td class="py-2 px-3 text-slate-500">{{ o.group_id or '—' }}</td>
+          <td class="py-2 px-3 text-slate-500">{{ o.updated_at or '' }}</td>
+        </tr>
+        {% endfor %}
+        {% if orgs|length == 0 %}
+        <tr><td class="py-4 px-3 text-slate-500" colspan="5">No results.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex items-center gap-2">
+    {% if page > 1 %}
+      <a class="px-3 py-2 rounded-lg ring-1 ring-slate-300 hover:bg-slate-50" href="{{ url_for('organizations_list', page=page-1, per_page=per_page, q=q) }}">← Prev</a>
+    {% else %}
+      <span class="px-3 py-2 rounded-lg ring-1 ring-slate-200 text-slate-400">← Prev</span>
+    {% endif %}
+    <span class="text-sm text-slate-500">Page {{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a class="px-3 py-2 rounded-lg ring-1 ring-slate-300 hover:bg-slate-50" href="{{ url_for('organizations_list', page=page+1, per_page=per_page, q=q) }}">Next →</a>
+    {% else %}
+      <span class="px-3 py-2 rounded-lg ring-1 ring-slate-200 text-slate-400">Next →</span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

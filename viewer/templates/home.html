@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6">
+    <h1 class="text-2xl font-semibold mb-2">Welcome</h1>
+    <p class="text-slate-600">Browse your synced Zendesk data.</p>
+
+    <div class="mt-4">
+      <a href="{{ url_for('tickets') }}"
+         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
+        Go to Tickets →
+      </a>
+    </div>
+  </div>
+{% endblock %}
